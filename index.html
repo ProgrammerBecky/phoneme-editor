@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="description" content="Chronos Game" />
+        <title>Phoneme Editor</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Syncopate&display=swap" rel="stylesheet">        
+        <link href="style.css" rel="stylesheet">        
+    </head>
+    <body>
+        <div id='Debug' style='position:absolute;top:0;left:0;z-index:9999;color:white'></div>
+        <div id='Loading'>
+            <h4 id='LoadingMessage'>[Loading]</h4>
+        </div>
+        <div id='Controls'>
+            <select id='Animation'></select>
+            <select id='Mood'>
+                <option value='relaxed'>Relaxed</option>
+                <option value='happy'>Happy</option>
+                <option value='happy-smile'>Happy-Smile</option>
+                <option value='happy-laugh'>Happy-Laugh</option>
+                <option value='pain'>Pain</option>
+                <option value='shock'>Shock</option>
+                <option value='anger'>Anger</option>
+                <option value='contempt'>Contempt</option>
+                <option value='contempt-pout'>Contempt-Pout</option>
+                <option value='confused'>Confused</option>
+                <option value='fear'>Fear</option>
+                <option value='sad'>Sad</option>
+            </select>
+        </div>
+        <div id='Morph'></div>
+        <input id='Speech' type='text'></div>
+        <script type="module" src="/src/index.js"></script>
+    </body>
+</html>
