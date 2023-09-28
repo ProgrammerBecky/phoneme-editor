@@ -8,7 +8,20 @@ export const EditorUI = {
     morphReport: 'report',
     waveform: null,
     waveformMagnification: 1,
+    waveformZoom: 7,
     visemeChain: [],
+
+    showCurrentTimecode: ( timecode ) => {
+        let timeline = document.getElementById( 'Timeline' );
+        if( ! EditorUI.currentTimecode ) {
+            EditorUI.currentTimecode = document.createElement('div');
+            EditorUI.currentTimecode.classList.add( 'current_timecode' );
+            timeline.appendChild( EditorUI.currentTimecode );
+        }
+        
+        const left = (timecode * 50 * EditorUI.waveformZoom).toFixed(2);
+        EditorUI.currentTimecode.style.left = `${left}px`;
+    },
 
     visualiseVisemeChain: () => {
 
@@ -24,24 +37,23 @@ export const EditorUI = {
             const visemeDom = document.createElement( 'div' );
             visemeDom.classList.add( 'viseme' );
             visemeDom.innerHTML = viseme.viseme;
-            console.log( viseme.timecode );
             visemeDom.style.top = '64px';
-            visemeDom.style.left = `${viseme.timecode * 50 * 7}px`;
+            visemeDom.style.left = `${viseme.timecode * 50 * EditorUI.waveformZoom}px`;
             
             timeline.appendChild( visemeDom );
         });
     },
 
     distributeVisemeChain: () => {
+        if( ! EditorUI.waveform || EditorUI.visemeChain.length === 0 ) return;
+        
         const duration = EditorUI.waveform.duration;
         const step = duration / EditorUI.visemeChain.length;
-        console.log( 'step' , EditorUI.visemeChain.length , duration , step );
         
         EditorUI.visemeChain.forEach( (viseme,index) => {
             EditorUI.visemeChain[index].timecode = step*index;
         });
         
-        console.log( 'visemeChain' , EditorUI.visemeChain );
         EditorUI.visualiseVisemeChain();
     },
 
@@ -64,7 +76,6 @@ export const EditorUI = {
             }
         }
         
-        console.log( 'visemeChain' , EditorUI.visemeChain );
         EditorUI.distributeVisemeChain();
         
     },
@@ -94,7 +105,7 @@ export const EditorUI = {
         
         const timeline = document.getElementById('Timeline');
         timeline.innerHTML = '';
-        console.log( filteredData );
+        EditorUI.currentTimecode = null;
 
         EditorUI.waveformMagnification = 99999999;
         filteredData.forEach( (data) => {
@@ -109,7 +120,7 @@ export const EditorUI = {
             const cell = document.createElement( 'div' );
             cell.classList.add( 'cell' );
             cell.style.height = `${(Math.abs(data)*EditorUI.waveformMagnification).toFixed(2)}px`;
-            cell.style.left = `${index*7}px`;
+            cell.style.left = `${index*EditorUI.waveformZoom}px`;
             if( data<0 ) cell.classList.add( 'reverse' );
             timeline.appendChild( cell );
             
@@ -117,6 +128,18 @@ export const EditorUI = {
     },
 
     buildAnimationSelector: () => {
+        
+        /* Timeline click to play handler */
+        const timeline = document.getElementById('Timeline');
+        timeline.addEventListener( 'click', e => {
+            const px = e.target.scrollLeft + e.clientX;
+            const set_timecode = px / ( 50 * EditorUI.waveformZoom );
+            if( G.character[0].speechAudio ) {
+                G.character[0].speechAudio.stop();
+                G.character[0].speechAudio.offset = set_timecode;
+                G.character[0].speechAudio.play();
+            }
+        });
         
         /* Transform Script to Viseme */
         const transformScript = document.getElementById('TransformScript');
@@ -222,7 +245,6 @@ export const EditorUI = {
             row.appendChild( range );
             morphPanel.appendChild( row );
         }
-        console.log( EditorUI.morphRangeReport );
         EditorUI.setAnimFromSelector();
     },
     

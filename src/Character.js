@@ -334,6 +334,11 @@ export class Character {
             }
             
         }
+        
+        if( this.speechAudio && this.speechAudio.isPlaying ) {
+            EditorUI.showCurrentTimecode( this.speechAudio.offset + this.speechAudio.context.currentTime - this.speechAudio._startedAt );
+        }
+        
     }
     
 }
