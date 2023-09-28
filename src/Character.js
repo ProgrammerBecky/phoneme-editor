@@ -1,6 +1,7 @@
 import {
     AnimationMixer,
     AnimationClip,
+    Audio,
 } from 'three';
 import { G } from './G.js';
 import { EditorUI } from './EditorUI.js';
@@ -11,6 +12,7 @@ export class Character {
         
         this.setInfluence = this.setInfluence.bind( this );
         
+        this.visemeChain = [];
         this.gender = 'female';
         
         G.gltf.load( '/3d/high/fnpc (1).glb' , result => {
@@ -270,8 +272,16 @@ export class Character {
             this.setInfluence( 'mouthShrugUpper' , 0.5 );
         }
         
-    }    
-    
+    }   
+
+    setSpeechBuffer( audioBuffer ) {
+        if( this.speechAudio ) this.speechAudio.stop();
+        if( ! this.speechAudio ) this.speechAudio = new Audio( G.listener );
+        this.speechAudio.setBuffer( audioBuffer );
+        this.speechAudio.setLoop( false );
+        this.speechAudio.play();
+    }
+
     update( delta ) {
         if( this.mixer ) {
             this.mixer._actions.map( (action,index) => {

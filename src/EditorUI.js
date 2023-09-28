@@ -1,12 +1,168 @@
 import { G } from './G.js';
+import { phoneme } from './phoneme.js';
 
 export const EditorUI = {
 
     morphRangeReport: [],
     gender: 'female',
     morphReport: 'report',
+    waveform: null,
+    waveformMagnification: 1,
+    visemeChain: [],
+
+    visualiseVisemeChain: () => {
+
+        const timeline = document.getElementById( 'Timeline' );
+        
+        const oldVisemeDom = document.getElementsByClassName( 'viseme' );
+        for( let i=0 ; i<oldVisemeDom.length ; i++ ) {
+            timeline.removeChild( oldVisemeDom[i] );
+        }
+        
+        EditorUI.visemeChain.forEach( (viseme,index) => {
+            
+            const visemeDom = document.createElement( 'div' );
+            visemeDom.classList.add( 'viseme' );
+            visemeDom.innerHTML = viseme.viseme;
+            console.log( viseme.timecode );
+            visemeDom.style.top = '64px';
+            visemeDom.style.left = `${viseme.timecode * 50 * 7}px`;
+            
+            timeline.appendChild( visemeDom );
+        });
+    },
+
+    distributeVisemeChain: () => {
+        const duration = EditorUI.waveform.duration;
+        const step = duration / EditorUI.visemeChain.length;
+        console.log( 'step' , EditorUI.visemeChain.length , duration , step );
+        
+        EditorUI.visemeChain.forEach( (viseme,index) => {
+            EditorUI.visemeChain[index].timecode = step*index;
+        });
+        
+        console.log( 'visemeChain' , EditorUI.visemeChain );
+        EditorUI.visualiseVisemeChain();
+    },
+
+    phonemeToViseme: ( textContent ) => {
+        textContent = textContent.toLowerCase();
+        EditorUI.visemeChain = [];
+        
+        while( textContent.length > 0 ) {
+            const viseme = phoneme.find( phone => {
+                return phone.letters.find( letter => 
+                    letter === textContent.substr(0,letter.length)
+                );
+            });
+            if( viseme ) {
+                EditorUI.visemeChain.push( viseme );
+                textContent = textContent.substr( viseme.letters.length );
+            }
+            else {
+                textContent = textContent.substr(1);
+            }
+        }
+        
+        console.log( 'visemeChain' , EditorUI.visemeChain );
+        EditorUI.distributeVisemeChain();
+        
+    },
+
+    showWaveform: (url) => {
+        window.AudioContext = window.AudioContext || window.webkitAudioContext;
+        const audioContext = new AudioContext();
+        
+        fetch( url )
+            .then( response => response.arrayBuffer())
+            .then( arrayBuffer => audioContext.decodeAudioData(arrayBuffer))
+            .then( audioBuffer => {
+               EditorUI.waveform = audioBuffer;
+               EditorUI.visualiseWaveform();
+               EditorUI.distributeVisemeChain();
+            });
+    },
+    
+    visualiseWaveform: () => {
+        const rawData = EditorUI.waveform.getChannelData(0);
+        const samples = EditorUI.waveform.duration * 50;
+        const blockSize = Math.floor( EditorUI.waveform.length / samples );
+        const filteredData = [];
+        for( let i=0 ; i<samples ; i++ ) {
+            filteredData.push( rawData[i * blockSize] );
+        }
+        
+        const timeline = document.getElementById('Timeline');
+        timeline.innerHTML = '';
+        console.log( filteredData );
+
+        EditorUI.waveformMagnification = 99999999;
+        filteredData.forEach( (data) => {
+            EditorUI.waveformMagnification = Math.min(
+                EditorUI.waveformMagnification,
+                64 / Math.abs(data),
+            );           
+        });
+
+        filteredData.map( (data,index) => {
+            
+            const cell = document.createElement( 'div' );
+            cell.classList.add( 'cell' );
+            cell.style.height = `${(Math.abs(data)*EditorUI.waveformMagnification).toFixed(2)}px`;
+            cell.style.left = `${index*7}px`;
+            if( data<0 ) cell.classList.add( 'reverse' );
+            timeline.appendChild( cell );
+            
+        });
+    },
 
     buildAnimationSelector: () => {
+        
+        /* Transform Script to Viseme */
+        const transformScript = document.getElementById('TransformScript');
+        transformScript.addEventListener( 'click' , () => {
+            const scriptElement = document.getElementById('Script');
+            const script = scriptElement.value;
+            EditorUI.phonemeToViseme( script );
+        });
+        
+        /* Audio File */
+        const audioUpload = document.getElementById('AudioUpload');
+        audioUpload.addEventListener( 'click', () => {
+            const audioFile = document.getElementById('AudioFile').files[0];
+            if( ! audioFile ) return;
+            
+            const audioUrl = URL.createObjectURL(audioFile);
+            G.audio.load( audioUrl , buffer => {
+                G.character[0].setSpeechBuffer( buffer );
+                EditorUI.showWaveform(audioUrl);
+            });
+        });
+        
+        /* Menu Tabs */
+        const menuTabs = document.getElementsByClassName( 'nav_tab' );
+        for( let i=0 ; i<menuTabs.length ; i++ ) {
+            const tab = menuTabs[i];
+            tab.addEventListener( 'click' , (e) => {
+                const menuTabs = document.getElementsByClassName( 'nav_tab' );
+                for( let i=0 ; i<menuTabs.length ; i++ ) {
+                    const tab = menuTabs[i];
+                    tab.classList.remove( 'active' );
+                }
+                
+                const contentTabs = document.getElementsByClassName( 'tab' );
+                for( let i=0 ; i<contentTabs.length ; i++ ) {
+                    const tab = contentTabs[i];
+                    tab.classList.remove( 'active' );
+                }
+                
+                e.target.classList.add( 'active' );
+                const activeTab = document.getElementById( tab.getAttribute('data-show-tabId') );
+                activeTab.classList.add( 'active' );
+            });
+        }
+        
+        /* Animation Selector */
         const animationSelect = document.getElementById('Animation');
         animationSelect.innerHTML = '';
         
@@ -18,9 +174,11 @@ export const EditorUI = {
         });
         animationSelect.addEventListener( 'change' , EditorUI.setAnimFromSelector );
         
+        /* Mood Selector */
         const moodSelect = document.getElementById('Mood');
         moodSelect.addEventListener( 'change' , EditorUI.setAnimFromSelector );
         
+        /* Morph Report */
         EditorUI.morphRangeReport = [];
         const morphPanel = document.getElementById('Morph');
         morphPanel.innerHTML = '';

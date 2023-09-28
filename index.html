@@ -32,8 +32,24 @@
                 <option value='sad'>Sad</option>
             </select>
         </div>
-        <div id='Morph'></div>
-        <input id='Speech' type='text'></div>
+        <div id='Morph' class='tab active'></div>
+        <div id='Speech' class='tab'>
+            <textarea
+                id='Script'
+                placeholder='Write or paste your script here'
+            ></textarea>
+            <button id='TransformScript'>Text to Viseme</button>
+        </div>
+        <div id='Audio' class='tab'>
+            <input type='file' id='AudioFile'/>
+            <button id='AudioUpload'>Audio Upload</button>
+        </div>
+        <div id='Tabs'>
+            <button class='nav_tab' data-show-tabId='Speech'>Script</button>
+            <button class='nav_tab' data-show-tabId='Audio'>Audio</button>
+            <button class='nav_tab active' data-show-tabId='Morph'>Morphs</button>
+        </div>
+        <div id='Timeline'></div>
         <script type="module" src="/src/index.js"></script>
     </body>
 </html>
