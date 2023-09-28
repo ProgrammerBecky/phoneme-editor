@@ -136,7 +136,9 @@ const init3d = () => {
     G.clock = new Clock();
     G.camera.rotation._order = 'ZYX';
     
-    G.character = new Character();
+    G.character = [
+        new Character()
+    ];
     
     animate();
 }
@@ -151,9 +153,9 @@ const animate = () => {
         G.controls.update();   
     }
     
-    if( G.character ) {
-        G.character.update( delta );
-    }
+    G.character.forEach( character => {
+        character.update( delta );
+    });
     
     G.renderer.render( G.scene , G.camera );
     G.stats.end();
