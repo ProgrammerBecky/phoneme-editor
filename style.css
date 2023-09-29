@@ -98,13 +98,26 @@ textarea {
     background-color: red;
     color: white;
     border: 1px solid white;
-    width: 48px;
+    width: 32px;
     height: 16px;
     font-size: 0.75rem;
     display: flex;
     flex-direction: row;
     justify-content: center;
     align-items: center;
+}
+.script {
+    position: absolute;
+    background-color: black;
+    color: white;
+    border: 1px solid white;
+    width: 32px;
+    height: 16px;
+    font-size: 0.75rem;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;    
 }
 .current_timecode{
     position: absolute;

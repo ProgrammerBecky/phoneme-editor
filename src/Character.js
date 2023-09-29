@@ -11,8 +11,10 @@ export class Character {
     constructor() {
         
         this.setInfluence = this.setInfluence.bind( this );
-        
-        this.visemeChain = [];
+
+        this.actionSequence = [];
+        this.actionSequenceTimer = 0;
+        this.actionSequenceIndex = -1;
         this.gender = 'female';
         
         G.gltf.load( '/3d/high/fnpc (1).glb' , result => {
@@ -273,6 +275,34 @@ export class Character {
         }
         
     }   
+    
+    setActiveViseme( viseme ) {
+        if( ! viseme ) return;
+        
+        const speed = viseme.speed ? viseme.speed : 7;
+        
+        this.setInfluence( 'viseme_sil' , 0 , speed );
+        this.setInfluence( 'viseme_PP' , 0 , speed );
+        this.setInfluence( 'viseme_FF' , 0 , speed );
+        this.setInfluence( 'viseme_TH' , 0 , speed );
+        this.setInfluence( 'viseme_DD' , 0 , speed );
+        this.setInfluence( 'viseme_kk' , 0 , speed );
+        this.setInfluence( 'viseme_CH' , 0 , speed );
+        this.setInfluence( 'viseme_SS' , 0 , speed );
+        this.setInfluence( 'viseme_nn' , 0 , speed );
+        this.setInfluence( 'viseme_RR' , 0 , speed );
+        this.setInfluence( 'viseme_aa' , 0 , speed );
+        this.setInfluence( 'viseme_E' , 0 , speed );
+        this.setInfluence( 'viseme_I' , 0 , speed );
+        this.setInfluence( 'viseme_O' , 0 , speed );
+        this.setInfluence( 'viseme_U' , 0 , speed );
+        
+        this.setInfluence( `viseme_${viseme.viseme}` , 1 , speed );
+    }
+    
+    setSpeech( actionSequence ) {
+        this.actionSequence = actionSequence;
+    }
 
     setSpeechBuffer( audioBuffer ) {
         if( this.speechAudio ) this.speechAudio.stop();
@@ -283,6 +313,7 @@ export class Character {
     }
 
     update( delta ) {
+        
         if( this.mixer ) {
             this.mixer._actions.map( (action,index) => {
                 if( action.direction === 'fast' ) {
@@ -335,8 +366,27 @@ export class Character {
             
         }
         
+        this.actionSequenceTimer += delta; //Typical behaviour
         if( this.speechAudio && this.speechAudio.isPlaying ) {
-            EditorUI.showCurrentTimecode( this.speechAudio.offset + this.speechAudio.context.currentTime - this.speechAudio._startedAt );
+            const current_timecode_from_audio_playback = this.speechAudio.offset + this.speechAudio.context.currentTime - this.speechAudio._startedAt;
+            EditorUI.showCurrentTimecode( current_timecode_from_audio_playback );
+            this.actionSequenceTimer = current_timecode_from_audio_playback;
+        }
+        
+        this.processActionSequence();
+        
+    }
+    
+    processActionSequence() {
+        
+        const nextActionSequenceIndex = this.actionSequence.findIndex( seq => 
+            seq.timecode > this.actionSequenceTimer
+        );
+        const lastActionSequenceIndex = nextActionSequenceIndex - 1;
+        
+        if( lastActionSequenceIndex !== this.actionSequenceIndex ) {
+            this.actionSequenceIndex = lastActionSequenceIndex;
+            this.setActiveViseme( this.actionSequence[ this.actionSequenceIndex ] );
         }
         
     }

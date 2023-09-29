@@ -27,6 +27,11 @@ export const EditorUI = {
 
         const timeline = document.getElementById( 'Timeline' );
         
+        const oldScriptDom = document.getElementsByClassName( 'script' );
+        for( let i=0 ; i<oldScriptDom.length ; i++ ) {
+            timeline.removeChild( oldScriptDom[i] );
+        }
+        
         const oldVisemeDom = document.getElementsByClassName( 'viseme' );
         for( let i=0 ; i<oldVisemeDom.length ; i++ ) {
             timeline.removeChild( oldVisemeDom[i] );
@@ -40,8 +45,18 @@ export const EditorUI = {
             visemeDom.style.top = '64px';
             visemeDom.style.left = `${viseme.timecode * 50 * EditorUI.waveformZoom}px`;
             
+            const scriptDom = document.createElement( 'div' );
+            scriptDom.classList.add( 'script' );
+            scriptDom.innerHTML = viseme.script;
+            scriptDom.style.bottom = '0';
+            scriptDom.style.left = `${viseme.timecode * 50 * EditorUI.waveformZoom}px`;
+            
             timeline.appendChild( visemeDom );
+            timeline.appendChild( scriptDom );
         });
+        
+        console.log( EditorUI.visemeChain );
+        G.character[0].setSpeech( EditorUI.visemeChain );
     },
 
     distributeVisemeChain: () => {
@@ -61,17 +76,29 @@ export const EditorUI = {
         textContent = textContent.toLowerCase();
         EditorUI.visemeChain = [];
         
+        let foundLetters = '';
+        let visemeClone = {};
+        
         while( textContent.length > 0 ) {
             const viseme = phoneme.find( phone => {
-                return phone.letters.find( letter => 
-                    letter === textContent.substr(0,letter.length)
-                );
+                return phone.letters.find( letter => {
+                    if( letter === textContent.substr(0,letter.length) ) {
+                        foundLetters = letter;
+                        return true;
+                    }
+                });
             });
             if( viseme ) {
-                EditorUI.visemeChain.push( viseme );
-                textContent = textContent.substr( viseme.letters.length );
+                visemeClone = {
+                    script: foundLetters,
+                    viseme: `${viseme.viseme}`,
+                    timecode: 0,
+                }
+                EditorUI.visemeChain.push( visemeClone );
+                textContent = textContent.substr( foundLetters.length );
             }
             else {
+                visemeClone.script += textContent.substr(0,1);
                 textContent = textContent.substr(1);
             }
         }
